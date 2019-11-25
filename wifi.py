@@ -6,29 +6,32 @@
 
 import network
 
-def connect(ssid, password=""):
+def connect(ssid, password="", silent=True):
     ap = network.WLAN(network.AP_IF)    
     ap.active(False)
 
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     if not wlan.isconnected():
-        print('connecting to network...')
+        if not silent:
+            print('connecting to network...')
         wlan.connect(ssid, password)
         while not wlan.isconnected():
             pass
 
-    print('network config:', wlan.ifconfig())
+    if not silent:
+        print('network config:', wlan.ifconfig())
 
-def disconnect():
+def disconnect(silent=True):
     wlan = network.WLAN(network.STA_IF)
     wlan.active(False)
     while wlan.isconnected():
         pass
 
-    print('disconnected.')
+    if not silent:
+        print('disconnected.')
 
-def access_point(ssid, passphrase=""):
+def access_point(ssid, passphrase="", silent=True):
     wlan = network.WLAN(network.STA_IF)
     wlan.active(False)
     while wlan.isconnected():
@@ -41,9 +44,10 @@ def access_point(ssid, passphrase=""):
     else:
         ap.config(essid=ssid, password=passphrase, authmode=4)
 
-    print('network config:', ap.ifconfig())
+    if not silent:
+        print('network config:', ap.ifconfig())
 
-def none():
+def none(silent=True):
     ap = network.WLAN(network.AP_IF)    
     ap.active(False)
 
@@ -52,7 +56,8 @@ def none():
     while wlan.isconnected():
         pass
 
-    print('wifi off')
+    if not silent:
+        print('wifi off')
 
 def off():
     none()
@@ -76,13 +81,48 @@ def scan():
 def status():
     ap = network.WLAN(network.AP_IF)
     print('AP :{0}'.format(ap.active()))
+    if (ap.active()):
+        (address, mask, gateway, dns) = ap.ifconfig()
+        print('  IP :{0}'.format(address))
+        print('  GW :{0}'.format(gateway))
+        print('  DNS:{0}'.format(dns))
 
     sta = network.WLAN(network.STA_IF)
     print('STA:{0}'.format(sta.active()))
     if (sta.active()):
         (address, mask, gateway, dns) = sta.ifconfig()
-        print('IP :{0}'.format(address))
-        print('GW :{0}'.format(gateway))
-        print('DNS:{0}'.format(dns))
+        print('  IP :{0}'.format(address))
+        print('  GW :{0}'.format(gateway))
+        print('  DNS:{0}'.format(dns))
     ma = ":".join(map(lambda x: "%02x" % x, sta.config('mac')))
     print('MAC:{0}'.format(ma))
+
+def connected():
+    wlan = network.WLAN(network.STA_IF)
+    return wlan.isconnected()
+
+def debug(state=True):
+    import esp
+    if state:
+        esp.osdebug(0)
+    else:
+        esp.osdebug(None)
+
+def man():
+    print("""
+Commands:
+    connect(ssid, [password], [silent]) - Connect to and access point*
+    disconnect([silent]) - Diconnect from the current access point*
+    access_point(ssid, [passphrase], [silent]) - Create an Access Point*
+    none([silent]) - Turn all WiFi interfaces off*
+    off() - Same as none()
+    scan() - List avaiable access points
+    status() - Show current WiFi status
+    connected() - Return status of the STA connection
+    debug(state) - Turns the debug messages on and off*
+
+    * = Setting will PERSIST a reboot
+""")
+
+def version():
+    return '1.1.0'
