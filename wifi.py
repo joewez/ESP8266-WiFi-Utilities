@@ -31,7 +31,7 @@ def disconnect(silent=True):
     if not silent:
         print('disconnected.')
 
-def access_point(ssid, passphrase="", silent=True):
+def access_point(ssid, passphrase="", dns=False, silent=True):
     wlan = network.WLAN(network.STA_IF)
     wlan.active(False)
     while wlan.isconnected():
@@ -39,6 +39,9 @@ def access_point(ssid, passphrase="", silent=True):
 
     ap = network.WLAN(network.AP_IF)    
     ap.active(True)
+    if dns:
+        local_ip = "192.168.4.1"
+        ap.ifconfig((local_ip, "255.255.255.0", local_ip, local_ip))
     if (passphrase == ''):
         ap.config(essid=ssid, password="", authmode=1)
     else:
@@ -113,7 +116,7 @@ def man():
 Commands:
     connect(ssid, [password], [silent]) - Connect to and access point*
     disconnect([silent]) - Diconnect from the current access point*
-    access_point(ssid, [passphrase], [silent]) - Create an Access Point*
+    access_point(ssid, [passphrase], [dns], [silent]) - Create an Access Point*
     none([silent]) - Turn all WiFi interfaces off*
     off() - Same as none()
     scan() - List avaiable access points
@@ -124,5 +127,8 @@ Commands:
     * = Setting will PERSIST a reboot
 """)
 
+def help():
+    man()
+
 def version():
-    return '1.1.0'
+    return '1.3.0'
